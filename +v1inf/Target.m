@@ -8,7 +8,7 @@ targ_yc: float                  # target Y coordinate (in um)
 targ_rawim: longblob            # raw dF/F stim response image
 targ_procim: longblob           # processed stim response image
 targ_label: float               # target label (0=control, 0.1=no ID, 1=good, 1.2=messy or partially split/merged source)
--> v1inf.Neuron                 # Target neuron/trace id, if it exists
+-> [nullable] v1inf.Neuron      # Target neuron/trace id, if it exists
 %}
 
 classdef Target < dj.Imported
