@@ -25,7 +25,7 @@ function allResp = makeRgRespStruct(thisExp)
 
 allResp = struct;
 allResp.nCycles = [];
-dF_deconv = fetchn(v1inf.Neuron & thisExp,'neur_deconv');
+dF_deconv = fetchn(v1inf.Neuron & thisExp,'neur_deconv','ORDER BY neur_id');
 dF_deconv = cat(2,dF_deconv{:})';
 gratingBlocks = find(~fetch1(thisExp,'stim_blocks'));
 stimInfo = fetch1(thisExp,'stim_info');
