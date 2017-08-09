@@ -4,8 +4,11 @@
 -> v1inf.Target
 -----
 inf_dist: double            # Pairwise distance (in um)
-inf_val=NULL: double        # Influence Value
 inf_naivecorr=NULL: double  # Neuron-Target Trace Correlation
+inf_rawmu=NULL: double      # Mean influence of stim period response
+inf_rawvar=NULL: double     # Variance of stim period response estimate
+inf_difmu=Null: double      # Mean influence of stim minus pre-period response
+inf_difvar=Null: double     # Variance of stim minus pre-period estimate
 %}
 
 classdef Influence < dj.Computed
@@ -31,9 +34,12 @@ classdef Influence < dj.Computed
             infDist = sqrt((neur_xc-targ_xc').^2 + (neur_yc-targ_yc').^2);
             naiveCorrs = computeNaiveCorr(neur_deconv, targ_neur_id, syncData);
             if sum(targ_label==0)>0
-                influenceVals = computeInfluenceRegression(stimData,targ_label);
+                [rawMu,rawVar, difMu, difVar] = computeInfluenceRegression(stimData,targ_label);
             else
-                influenceVals = nan(size(infDist));
+                rawMu = nan(size(infDist));
+                rawVar = nan(size(infDist));
+                difMu = nan(size(infDist));
+                difVar = nan(size(infDist));
                 warning('Experiment on %s contains no control stimulation',key.exp_date),
             end
             
@@ -44,7 +50,10 @@ classdef Influence < dj.Computed
                     keys(nNeuron,nTarg).targ_id = nTarg;
                     keys(nNeuron,nTarg).inf_dist = infDist(nNeuron,nTarg);
                     keys(nNeuron,nTarg).inf_naivecorr = naiveCorrs(nNeuron,nTarg);
-                    keys(nNeuron,nTarg).inf_val = influenceVals(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_rawmu = rawMu(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_rawvar = rawVar(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_difmu = difMu(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_difvar = difVar(nNeuron,nTarg);
                 end
             end
             
@@ -70,10 +79,11 @@ for nBlock = validBlocks
     bin_deconv = squeeze(mean(reshape(neur_deconv(blockInd,:),10,[],nNeurons),1));
     naiveCorrs(:,validTarg,validBlocks==nBlock) = corr(bin_deconv,bin_deconv(:,targ_neur_id(validTarg)));
 end
-naiveCorrs = mean(naiveCorrs,3);
+naiveCorrs = nanmean(naiveCorrs,3);
 end
 
-function influenceVals = computeInfluenceRegression(stimData,targ_label);
+function [rawMu,rawVar, difMu, difVar] = ...
+    computeInfluenceRegression(stimData,targ_label)
 
 validStim = find(targ_label>0);
 controlStim = find(targ_label == 0);
@@ -101,26 +111,37 @@ for mvBin = 1:length(mvBins)-1
 end
 X(:,nStim+length(allDir)+1) = []; % Use lowest movement bin as 'intercept'
 
-Y = stimData.stim_de_resp-stimData.stim_de_pre;
+yRaw = stimData.stim_de_resp;
+yDif = stimData.stim_de_resp-stimData.stim_de_pre;
 
-fitMu = nan(size(X,2),size(Y,2));
-fitVar = nan(size(X,2),size(Y,2));
+fitMu_raw = nan(size(X,2),size(yRaw,2));
+fitVar_raw = nan(size(X,2),size(yRaw,2));
+fitMu_dif = nan(size(X,2),size(yRaw,2));
+fitVar_dif = nan(size(X,2),size(yRaw,2));
 blmObj = diffuseblm(size(X,2),'Intercept',false);
-for n=1:size(Y,2)
-    [~,tmpMu,tmpCov] = estimate(blmObj,X,Y(:,n),'Display',false);
+for n=1:size(yRaw,2)
+    [~,tmpMu,tmpCov] = estimate(blmObj,X,yRaw(:,n),'Display',false);
     tmpVar = diag(tmpCov);
-    fitMu(:,n) = tmpMu;
-    fitVar(:,n) = tmpVar;
+    fitMu_raw(:,n) = tmpMu;
+    fitVar_raw(:,n) = tmpVar;
+    
+    [~,tmpMu,tmpCov] = estimate(blmObj,X,yDif(:,n),'Display',false);
+    tmpVar = diag(tmpCov);
+    fitMu_dif(:,n) = tmpMu;
+    fitVar_dif(:,n) = tmpVar;
 end
 
 %% Reformat Fitted parameters
-stimBeta = nan(length(targ_label),size(Y,2));
-stimBetaVar = nan(length(targ_label),size(Y,2));
-stimBeta(validStim,:) = fitMu(1:nStim,:);
-stimBetaVar(validStim,:) = fitVar(1:nStim,:);
+rawMu = nan(size(yRaw,2),length(targ_label));
+rawVar = nan(size(yRaw,2),length(targ_label));
+difMu = nan(size(yRaw,2),length(targ_label));
+difVar = nan(size(yRaw,2),length(targ_label));
 
-respBeta = fitMu(nStim+1:end,:);
-respBetaVar = fitVar(nStim+1:end,:);
+rawMu(:,validStim) = fitMu_raw(1:nStim,:)';
+rawVar(:,validStim) = fitVar_raw(1:nStim,:)';
+difMu(:,validStim) = fitMu_dif(1:nStim,:)';
+difVar(:,validStim) = fitVar_dif(1:nStim,:)';
 
-influenceVals = (stimBeta./sqrt(stimBetaVar))';
+% respBeta = fitMu(nStim+1:end,:);
+% respBetaVar = fitVar(nStim+1:end,:);
 end
