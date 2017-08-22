@@ -1,14 +1,14 @@
 %{
-# Influence Measurement Directed Pair (Regression-based)
+# Influence Measurement Directed Pair
 -> v1inf.Neuron
 -> v1inf.Target
 -----
 inf_dist: double            # Pairwise distance (in um)
 inf_naivecorr=NULL: double  # Neuron-Target Trace Correlation
-inf_rawmu=NULL: double      # Mean influence of stim period response
-inf_rawvar=NULL: double     # Variance of stim period response estimate
-inf_difmu=Null: double      # Mean influence of stim minus pre-period response
-inf_difvar=Null: double     # Variance of stim minus pre-period estimate
+inf_regmu=NULL: double      # Regression-based estimate of mean effect
+inf_regvar=NULL: double     # Regression-based variance of mean estimate
+inf_shuf_p=Null: double      # Parametric shuffle estimate of significance
+inf_shuf_n=Null: double     # Nonparametric shuffle estimate of significance
 %}
 
 classdef Influence < dj.Computed
@@ -34,14 +34,13 @@ classdef Influence < dj.Computed
             infDist = sqrt((neur_xc-targ_xc').^2 + (neur_yc-targ_yc').^2);
             naiveCorrs = computeNaiveCorr(neur_deconv, targ_neur_id, syncData);
             if sum(targ_label==0)>0
-                [rawMu,rawVar, difMu, difVar] = computeInfluenceRegression(stimData,targ_label);
+                [regMu,regVar] = computeInfluenceRegression(stimData,targ_label);
             else
-                rawMu = nan(size(infDist));
-                rawVar = nan(size(infDist));
-                difMu = nan(size(infDist));
-                difVar = nan(size(infDist));
+                regMu = nan(size(infDist));
+                regVar = nan(size(infDist));
                 warning('Experiment on %s contains no control stimulation',key.exp_date),
             end
+            [nRespMat, pRespMat] = calcStimShuffle(stimData, infDist, targ_label);
             
             keys = repmat(key,size(infDist));
             for nNeuron = 1:size(infDist,1)
@@ -50,10 +49,10 @@ classdef Influence < dj.Computed
                     keys(nNeuron,nTarg).targ_id = nTarg;
                     keys(nNeuron,nTarg).inf_dist = infDist(nNeuron,nTarg);
                     keys(nNeuron,nTarg).inf_naivecorr = naiveCorrs(nNeuron,nTarg);
-                    keys(nNeuron,nTarg).inf_rawmu = rawMu(nNeuron,nTarg);
-                    keys(nNeuron,nTarg).inf_rawvar = rawVar(nNeuron,nTarg);
-                    keys(nNeuron,nTarg).inf_difmu = difMu(nNeuron,nTarg);
-                    keys(nNeuron,nTarg).inf_difvar = difVar(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_regmu = regMu(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_regvar = regVar(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_shuf_p = pRespMat(nNeuron,nTarg);
+                    keys(nNeuron,nTarg).inf_shuf_n = nRespMat(nNeuron,nTarg);
                 end
             end
             
@@ -82,7 +81,7 @@ end
 naiveCorrs = nanmean(naiveCorrs,3);
 end
 
-function [rawMu,rawVar, difMu, difVar] = ...
+function [regMu,regVar] = ...
     computeInfluenceRegression(stimData,targ_label)
 
 validStim = find(targ_label>0);
@@ -102,46 +101,108 @@ for iDir = 1:length(allDir)
     X(:,nStim+iDir) = (stimData.stim_vis_dir == allDir(iDir));
 end
 
+logSpd = log(stimData.stim_mv_spd);
 mvBins = 0:25:100;
 for mvBin = 1:length(mvBins)-1
-    binMin = prctile(stimData.stim_mv_spd,mvBins(mvBin));
-    binMax = prctile(stimData.stim_mv_spd,mvBins(mvBin+1));
+    binMin = prctile(logSpd,mvBins(mvBin));
+    binMax = prctile(logSpd,mvBins(mvBin+1));
     X(:,nStim+length(allDir)+mvBin) = ...
-        (stimData.stim_mv_spd <= binMax) & (stimData.stim_mv_spd > binMin);
+        (logSpd <= binMax) & (logSpd > binMin);
 end
 X(:,nStim+length(allDir)+1) = []; % Use lowest movement bin as 'intercept'
 
-yRaw = stimData.stim_de_resp;
-yDif = stimData.stim_de_resp-stimData.stim_de_pre;
+validTrials = ~isnan(stimData.stim_targ_id);
+X = X(validTrials,:);
+yRaw = stimData.stim_de_resp(validTrials,:);
 
 fitMu_raw = nan(size(X,2),size(yRaw,2));
 fitVar_raw = nan(size(X,2),size(yRaw,2));
-fitMu_dif = nan(size(X,2),size(yRaw,2));
-fitVar_dif = nan(size(X,2),size(yRaw,2));
 blmObj = diffuseblm(size(X,2),'Intercept',false);
 for n=1:size(yRaw,2)
     [~,tmpMu,tmpCov] = estimate(blmObj,X,yRaw(:,n),'Display',false);
     tmpVar = diag(tmpCov);
     fitMu_raw(:,n) = tmpMu;
     fitVar_raw(:,n) = tmpVar;
-    
-    [~,tmpMu,tmpCov] = estimate(blmObj,X,yDif(:,n),'Display',false);
-    tmpVar = diag(tmpCov);
-    fitMu_dif(:,n) = tmpMu;
-    fitVar_dif(:,n) = tmpVar;
 end
 
 %% Reformat Fitted parameters
-rawMu = nan(size(yRaw,2),length(targ_label));
-rawVar = nan(size(yRaw,2),length(targ_label));
-difMu = nan(size(yRaw,2),length(targ_label));
-difVar = nan(size(yRaw,2),length(targ_label));
+regMu = nan(size(yRaw,2),length(targ_label));
+regVar = nan(size(yRaw,2),length(targ_label));
 
-rawMu(:,validStim) = fitMu_raw(1:nStim,:)';
-rawVar(:,validStim) = fitVar_raw(1:nStim,:)';
-difMu(:,validStim) = fitMu_dif(1:nStim,:)';
-difVar(:,validStim) = fitVar_dif(1:nStim,:)';
+regMu(:,validStim) = fitMu_raw(1:nStim,:)';
+regVar(:,validStim) = fitVar_raw(1:nStim,:)';
+end
 
-% respBeta = fitMu(nStim+1:end,:);
-% respBetaVar = fitVar(nStim+1:end,:);
+
+function [nRespMat, pRespMat] = ...
+    calcStimShuffle(stimData, infDist, targ_label)
+
+distThresh = 30;
+nShuffles = 1e5;
+[nRespCells,nTargets] = size(infDist);
+
+
+%% Calculate Residual Signal
+allDirs = unique(stimData.stim_vis_dir);
+visAvg = []; visResid = [];
+for s=1:length(allDirs)
+    theseTrials = (stimData.stim_vis_dir==allDirs(s));
+    for n=1:nRespCells
+        validStim = find(infDist(n,:) >= distThresh);
+        validInd = theseTrials & ismember(stimData.stim_targ_id,validStim);
+        visAvg(s,n) = mean(stimData.stim_de_resp(validInd,n));
+    end
+    visResid(theseTrials,:) = stimData.stim_de_resp(theseTrials,:) - visAvg(s,:);
+end
+
+%% Shuffle Bootstrap
+
+nReps = sum(~isnan(stimData.stim_targ_id))/nTargets;
+fprintf('Detected Repetitions of Target Stim: %d \n',nReps),
+nTrials = size(visResid,1);
+
+validTrialsCell = cell(0);
+for n = 1:nRespCells
+    validStim = find(infDist(n,:) >= distThresh);
+    validTrialsCell{n} = find(ismember(stimData.stim_targ_id,validStim));
+end
+
+shufMat = nan(nShuffles,nRespCells);
+parfor n=1:nRespCells
+% for n=1:nRespCells
+    validTrials = validTrialsCell{n};
+    nValid = length(validTrials);
+    for nShuffle = 1:nShuffles
+        subTri = validTrials(randperm(nValid,nReps));
+        shufMat(nShuffle,n) = mean(visResid(subTri,n));
+    end
+end
+
+shufSTD = mean(abs(shufMat))' * 1.253;
+
+respMat = nan(nRespCells,nTargets);
+for nStimCell = 1:nTargets
+    theseTri = (stimData.stim_targ_id==nStimCell);
+    respMat(:,nStimCell) = mean(visResid(theseTri,:))';
+end
+
+controlStim = find(targ_label == 0);
+if ~isempty(controlStim)
+    controlOffsets = mean(respMat(:,controlStim),2);
+    respMat = respMat - controlOffsets;
+else
+    warning('No Control Targets: Shuffle Offset not computed'),
+end
+
+pRespMat = respMat./shufSTD;
+
+for n=1:size(respMat,1)
+    for t=1:size(respMat,2)
+        gtMat(n,t) = sum(shufMat(:,n)>respMat(n,t));
+        ltMat(n,t) = sum(shufMat(:,n)<respMat(n,t));
+    end
+end
+
+nRespMat = log10((nShuffles-gtMat+1)./(nShuffles-ltMat+1));
+
 end
