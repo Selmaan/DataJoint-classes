@@ -11,7 +11,7 @@ classdef SelfStim < dj.Computed
 		function makeTuples(self, key)
             thisTarget = fetch(v1inf.Target & key,'neur_id');
             if ~isnan(thisTarget.neur_id)
-                key.self_stim = fetch1(v1inf.Influence & thisTarget,'inf_rawmu');
+                key.self_stim = fetch1(v1inf.Influence & thisTarget,'inf_shuf_p');
             else
                 key.self_stim = nan;
             end
