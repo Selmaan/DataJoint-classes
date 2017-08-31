@@ -188,8 +188,16 @@ end
 
 controlStim = find(targ_label == 0);
 if ~isempty(controlStim)
-    controlOffsets = mean(respMat(:,controlStim),2);
-    respMat = respMat - controlOffsets;
+    for n = 1:nRespCells
+        validStim = find(infDist(n,:) >= distThresh);
+        validControl = intersect(controlStim,validStim);
+        if isempty(validControl)
+            controlOffset = 0;
+        else
+            controlOffset = mean(respMat(n,validControl),2);
+        end
+        respMat(n,:) = respMat(n,:) - controlOffset;
+    end
 else
     warning('No Control Targets: Shuffle Offset not computed'),
 end
