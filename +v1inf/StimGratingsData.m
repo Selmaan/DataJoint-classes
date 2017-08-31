@@ -39,8 +39,8 @@ function [stimID,visDir,mvSpd,mvPre,deResp,dePre] = stimGratingsResp(syncInfo, n
 
 stimID=[];visDir=[];mvSpd=[];mvPre=[];deResp=[];dePre=[];
 
-respFrameRange = 0:15;
-preFrameRange = -6:-1;
+respFrameRange = 0:10;
+preFrameRange = -14:-4;
 
 ballVel = cat(1,syncInfo.ball_vel{:});
 ballVel = bsxfun(@minus,ballVel,mode(ballVel));
