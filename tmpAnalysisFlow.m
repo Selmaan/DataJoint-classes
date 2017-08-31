@@ -105,5 +105,58 @@ figure,plot(xDisp,yMu,'k')
 hold on,plot(xDisp,yMu+sqrt(yVar),'r')
 hold on,plot(xDisp,yMu-sqrt(yVar),'r')
 
-%% 2-d regression, linear interaction
+%% 2-d regression, additive covariance
+tmpInd = iD>=30;
+tmpDist = iD(tmpInd);
+tmpCorr = iC(tmpInd);
+% tmpInf = (rM(tmpInd)./sqrt(rV(tmpInd)));
+% tmpCorr(isnan(tmpInf))=[]; tmpDist(isnan(tmpInf)) = []; tmpInf(isnan(tmpInf))=[];
+tmpInf = sN(tmpInd);
+
+hyp = struct();
+likFunc = {@likGauss};
+hyp.lik = 0;
+meanFunc = {@meanConst};
+hyp.mean = 0;
+infFunc = @infGaussLik;
+% covFun1 = {@covMask, {[1 0], {@covRQ,'iso',[]}}}';
+% covFun2 = {@covMask, {[0 1], {@covRQ,'iso',[]}}}';
+% covFunc = {@covScale {@covSum, {covFun1, covFun2}}};
+% hyp.cov = [3;0;-2;0;0];
+covFunc = {@covADD,{[1,2],'covRQiso'}};
+hyp.cov = [3;0;0;-2;0;0;0;0];
+
+xu_d = linspace(25,700,20)'; 
+xu_c = linspace(min(tmpCorr),max(tmpCorr),20)';
+[xu_d,xu_c] = ndgrid(xu_d,xu_c);
+xu = [xu_d(:), xu_c(:)];
+
+covFunc = {'apxSparse',covFunc,xu};      % inducing points
+infApx  = @(varargin) infFunc(varargin{:},struct('s',0.0));           % VFE, opt.s = 0
+hyp.xu = xu;
+
+optHyp = minimize(hyp,@gp,-100,...
+    infApx,meanFunc,covFunc,likFunc,[tmpDist,tmpCorr],tmpInf);
+
+[disp_d, disp_c] = ndgrid(linspace(25,650,100)',...
+    linspace(min(tmpCorr),max(tmpCorr),99)'); 
+xDisp = [disp_d(:), disp_c(:)];
+[~,~,yMu,yVar] = gp(optHyp,infApx,meanFunc,covFunc,likFunc,[tmpDist,tmpCorr],tmpInf,xDisp);
+yMu = reshape(yMu,100,99); yVar = reshape(yVar,100,99);
+figure,imagesc(disp_c(1,:),disp_d(:,1),yMu)
+colorbar
+xlabel('Neuron-Target Trace Correlation')
+ylabel('Neuron Target Distance (um)')
+
+figure,plot(disp_c(1,:),yMu([4,18,50,75,95],:)','linewidth',2)
+axis tight
+xlabel('Neuron-Target Correlation')
+ylabel('Mean Influence')
+
+figure,plot(disp_d(:,1),yMu(:,[5,25,50,75,95]),'linewidth',2)
+legend('-.3','-.1','.06','.32','.58')
+axis tight
+xlabel('Neuron-Target Distance (um)')
+ylabel('Mean Influence')
+title('Additive Covariance'),
 
