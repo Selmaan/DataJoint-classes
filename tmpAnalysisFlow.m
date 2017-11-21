@@ -1,7 +1,7 @@
 %%
 % validBin = v1inf.InfluenceBin & 'bin_id=12';
-validBin = v1inf.Influence & 'exp_date<"2017-07-27"';
-% validBin = v1inf.Influence;
+% validBin = v1inf.Influence & 'exp_date<"2017-07-27"';
+validBin = v1inf.Influence & 'exp_date="2017-11-06"';
 validStim = v1inf.SelfStim & 'self_stim>5';
 validFilt = v1inf.FiltOverlap - 'filt_overlap>0';
 [iD,iC,rM,rV,sN,sP] = fetchn(((validBin & validFilt) & validStim) - v1inf.Target,...
@@ -9,7 +9,7 @@ validFilt = v1inf.FiltOverlap - 'filt_overlap>0';
 iC(isnan(iC)) = 0;
 
 %%
-tmpInd = iD>=25 & neurIDX==3;
+tmpInd = iD>=25;
 
 tmpDist = iD(tmpInd);
 % tmpInf = (rM(tmpInd)./sqrt(rV(tmpInd)));
