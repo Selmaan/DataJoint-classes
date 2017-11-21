@@ -48,3 +48,4 @@ populate(v1inf.SelfStim),
 % After fitting randomGratings on Orchestra, execute the following code
 populate(v1inf.RandomGratingsGP),
 populate(v1inf.TuningProps),
+populate(v1inf.PairCorrs),
