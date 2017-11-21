@@ -1,8 +1,13 @@
-mouseIDs = fetchn(v1inf.Mouse,'mouse_id');
+% This script helps add new experimental sessions or mice to the database
+
+%% Add new Sessions
+
+% mouseIDs = fetchn(v1inf.Mouse,'mouse_id');
+mouseIDs = 33; %Insert new mouse ID here!
 
 for nID = 1:length(mouseIDs)
     id = mouseIDs(nID);
-    baseDir = sprintf('%s%d%s','Z:\HarveyLab\Selmaan\V1-RF\m',id);
+    baseDir = sprintf('%s%d%s','Z:\HarveyLab\Tier1\Selmaan\V1-RF\m',id);
     seshFolders = dir(sprintf('%s%s',baseDir,'\1*'));
     for nFolder = 1:length(seshFolders)
         thisDir = fullfile(baseDir,seshFolders(nFolder).name);
@@ -27,3 +32,19 @@ for nID = 1:length(mouseIDs)
     end
 end
     
+%%
+% After adding new session to database from sever, run following code
+populate(v1inf.ExpSync),
+populate(v1inf.Neuron),
+populate(v1inf.Target),
+populate(v1inf.RandomGratingsExp),
+% Manually export randomGratings data for fitting on orchestra
+populate(v1inf.StimGratingsData),
+populate(v1inf.FiltOverlap),
+populate(v1inf.Influence),
+populate(v1inf.SelfStim),
+
+%%
+% After fitting randomGratings on Orchestra, execute the following code
+populate(v1inf.RandomGratingsGP),
+populate(v1inf.TuningProps),
