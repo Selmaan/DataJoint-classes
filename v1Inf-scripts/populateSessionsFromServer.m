@@ -3,7 +3,7 @@
 %% Add new Sessions
 
 % mouseIDs = fetchn(v1inf.Mouse,'mouse_id');
-mouseIDs = 33; %Insert new mouse ID here!
+mouseIDs = 37; %Insert new mouse ID here!
 
 for nID = 1:length(mouseIDs)
     id = mouseIDs(nID);
@@ -35,6 +35,7 @@ end
 %%
 % After adding new session to database from sever, run following code
 populate(v1inf.ExpSync),
+populate(v1inf.MeanRefImg),
 populate(v1inf.Neuron),
 populate(v1inf.Target),
 populate(v1inf.RandomGratingsExp),
@@ -49,3 +50,4 @@ populate(v1inf.SelfStim),
 populate(v1inf.RandomGratingsGP),
 populate(v1inf.TuningProps),
 populate(v1inf.PairCorrs),
+populate(v1inf.TuningDOM),
