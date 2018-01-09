@@ -1,3 +1,4 @@
+%% (0) Select Appropriate Data
 
 clear
 % Restrict to Original Dataset minus monitor-off experiments
@@ -21,6 +22,13 @@ tuneCriteriaInfluence = tunedInfluence & 'inf_dist>25' & 'inf_neur_testcorr>0.4'
 
 [iD,traceCorr,sN,sP] = fetchn(distCriteriaInfluence,'inf_dist','inf_naivecorr','inf_shuf_n','inf_shuf_p');
 traceCorr(~isfinite(traceCorr)) = 0;
+
+posExtreme = traceCorr>prctile(traceCorr,97.5);
+negExtreme = traceCorr<prctile(traceCorr,2.5);
+midRange = ~posExtreme & ~negExtreme;
+figure,cdfplot(iD(midRange)),
+hold on,cdfplot(iD(posExtreme)),cdfplot(iD(negExtreme)),
+
 
 [yM_dist,xM_dist,yS_dist] = valueSmoothingBootstrap(iD,sN,linspace(10,650,250),30,1e3);
 figure,plot(xM_dist,yM_dist,'k','linewidth',2)
@@ -149,6 +157,7 @@ end
 
 betaTrue = xTmp_pinv * sN;
 sigBeta = min(mean(betaTrue<betaShuf,2),mean(betaTrue>betaShuf,2));
+[betaTrue(7:end),sigBeta(7:end)],
 
 %% Extrema Analysis
 nShuffles = 1e4;
@@ -160,9 +169,6 @@ xTmp_midRange_pinv = pinv(xTmp(~isExtrema,:));
 sN_midRange = sN(~isExtrema);
 xTmp_extrema_pinv = pinv(xTmp(isExtrema,:));
 sN_extrema = sN(isExtrema);
-
-figure,ecdf(iD(~isExtrema))
-hold on,ecdf(iD(isExtrema))
 
 % Fit midRange shuffles
 betaShuf = nan(size(xTmp,2),nShuffles);
@@ -182,3 +188,50 @@ sigBeta_extrema = min(mean(betaTrue_extrema<betaShuf,2),mean(betaTrue_extrema>be
 
 figure,bar([betaTrue_midRange(7:end),betaTrue_extrema(7:end)])
 [sigBeta_midRange(7:end),sigBeta_extrema(7:end)],
+
+%% Sub-tunings Shuffle
+nShuffles = 1e4;
+subTunings = zscore([sfCorr, dirCorr, spdCorr, tuneCorr, traceCorr, oriCorr, tfCorr, sigCorr]);
+% subTunings = zscore([sigCorr, dirCorr, oriCorr, sfCorr, tfCorr, spdCorr, tuneCorr, traceCorr]);
+
+allBetaVal = nan(9,size(subTunings,2));
+allBetaSig = nan(9,size(subTunings,2));
+for subTuning = 1:size(subTunings,2)
+    xTmp = [X_dist subTunings(:,subTuning), X_noi]; xTmp(isnan(xTmp)) = 0;
+    xTmp_pinv = pinv(xTmp);
+   
+    betaTrue = xTmp_pinv * sN;
+    betaShuf = nan(size(xTmp,2),nShuffles);
+    parfor nShuffle = 1:nShuffles
+        betaShuf(:,nShuffle) = xTmp_pinv * sN(randperm(length(sN)));
+    end
+    allBetaVal(:,subTuning) = betaTrue;
+    allBetaSig(:,subTuning) = min(mean(betaTrue<betaShuf,2),mean(betaTrue>betaShuf,2));
+end
+
+figure,bar(allBetaVal(7,:)'),
+figure,bar(log10(1/nShuffles + allBetaSig(7,:)')),
+%% Tuning-Specific Shuffle
+nShuffles = 1e3;
+
+xTmp = [X_dist X_sig, X_noi, X_int]; xTmp(isnan(xTmp)) = 0;
+nearDist_X = xTmp(xTmp(:,1)==1,:); nearDist_Y = sN(xTmp(:,1)==1);
+midDist_X = xTmp(xTmp(:,3)==1,:); midDist_Y = sN(xTmp(:,3)==1);
+farDist_X = xTmp(xTmp(:,5)==1,:); farDist_Y = sN(xTmp(:,5)==1);
+
+nDistPreds = size(X_dist,2);
+betaShuf = nan(size(xTmp,2),nShuffles);
+thisNear = nearDist_X; thisMid = midDist_X; thisFar = farDist_X;
+for nShuffle = 1:nShuffles
+    nearPerm = randperm(length(nearDist_Y));
+    thisNear(:,nDistPreds+1:end) = nearDist_X(nearPerm,nDistPreds+1:end);
+    midPerm = randperm(length(midDist_Y));
+    thisMid(:,nDistPreds+1:end) = midDist_X(midPerm,nDistPreds+1:end);
+    farPerm = randperm(length(farDist_Y));
+    thisFar(:,nDistPreds+1:end) = farDist_X(farPerm,nDistPreds+1:end);    
+    betaShuf(:,nShuffle) = pinv([thisNear;thisMid;thisFar]) *[nearDist_Y;midDist_Y;farDist_Y];
+end
+
+betaTrue = pinv([nearDist_X;midDist_X;farDist_X])*[nearDist_Y;midDist_Y;farDist_Y];
+sigBeta = min(mean(betaTrue<betaShuf,2),mean(betaTrue>betaShuf,2));
+[betaTrue(7:end),sigBeta(7:end)],
