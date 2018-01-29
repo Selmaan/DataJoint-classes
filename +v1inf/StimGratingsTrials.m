@@ -41,10 +41,6 @@ end
 
 function [allProj,allGain,uniProj] = computeStimProjections(stimExpt,key)
 
-% distThresh = 25;
-% distMat = sqrt((nX-tX').^2 + (nY-tY').^2);
-% [nX,nY] = fetchn(v1inf.Neuron & key,'neur_xc','neur_yc','ORDER BY neur_id');
-% [tX,tY,tLabel] = fetchn(v1inf.Target & key,'targ_xc','targ_yc','targ_label','ORDER BY targ_id');
 % visResid = nan(size(subResp));
 %     visResid(theseTrials,:) = subResp(theseTrials,:) - visAvg(:,i)';
 %     for n=1:size(distMat,1)
@@ -61,18 +57,27 @@ function [allProj,allGain,uniProj] = computeStimProjections(stimExpt,key)
 %     end
 % end
 
+% distThresh = 15;
+
 %% Get Average Vectors and Residuals
 deResp = stimExpt.stim_de_resp;
 preResp = stimExpt.stim_de_pre;
 visOri = mod(stimExpt.stim_vis_dir,180);
 stimID = stimExpt.stim_targ_id;
 
+% [nX,nY] = fetchn(v1inf.Neuron & key,'neur_xc','neur_yc','ORDER BY neur_id');
+% [tX,tY,tLabel] = fetchn(v1inf.Target & key,'targ_xc','targ_yc','targ_label','ORDER BY targ_id');
 tLabel = fetchn(v1inf.Target & key,'targ_label','ORDER BY targ_id');
 nTargTraces = sum(tLabel>.99);
+% 
+% distMat = sqrt((nX-tX').^2 + (nY-tY').^2);
+% excludeDist = sum(distMat<distThresh,2)>0;
+excludeDist = false(size(deResp,2),1);
+excludeDist(1:nTargTraces) = 1;
 
 allOri = unique(visOri);
 subResp = (deResp-preResp)./std(preResp);
-subResp = subResp(:,nTargTraces+1:end);
+subResp = subResp(:,~excludeDist);
 visAvg = nan(size(subResp,2),length(allOri)); 
 
 for i=1:length(allOri)
