@@ -93,7 +93,6 @@ end
 visNorm = visAvg./oriNorm;
 uniNorm = ones(size(visAvg,1),1)/sqrt(size(visAvg,1));
 
-onResid = nan(length(visOri),1);
 uniProj = nan(length(visOri),1);
 allProj = nan(length(visOri),length(allOri));
 allGain = nan(length(visOri),length(allOri));
@@ -103,9 +102,9 @@ for nTrial=1:length(visOri)
     scaledResp = subResp(nTrial,:) ./ oriNorm(thisDirInd);
     
     uniProj(nTrial) = scaledResp * uniNorm;
-    onResid(nTrial) = scaledResp * thisProj;
+    gainResp = scaledResp * thisProj;
     allProj(nTrial,:) = scaledResp * circshift(visNorm,-thisDirInd+1,2);
-    allGain(nTrial,:) = (onResid(nTrial)*thisProj') * circshift(visNorm,-thisDirInd+1,2);
+    allGain(nTrial,:) = (gainResp*thisProj') * circshift(visNorm,-thisDirInd+1,2);
  end
 % uniProj = visResid * uniNorm;
 
