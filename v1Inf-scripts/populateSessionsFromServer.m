@@ -43,11 +43,18 @@ populate(v1inf.RandomGratingsExp),
 populate(v1inf.StimGratingsData),
 populate(v1inf.FiltOverlap),
 populate(v1inf.Influence),
-populate(v1inf.SelfStim),
+populate(v1inf.StimGratingsTrials),
+populate(v1inf.StimGratingsTrialsNB),
+populate(v1inf.StimGratingsNeurMI),
 
 %%
 % After fitting randomGratings on Orchestra, execute the following code
+% Need to manually set up the file locations to load in GP models...
 populate(v1inf.RandomGratingsGP),
 populate(v1inf.TuningProps),
 populate(v1inf.PairCorrs),
 populate(v1inf.TuningDOM),
+
+%%
+% Process STAs on their own timescale, can take quite a while...
+populate(v1inf.StimTrigAvgs),
