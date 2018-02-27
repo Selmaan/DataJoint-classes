@@ -33,7 +33,11 @@ classdef TuningProps < dj.Computed
 	methods(Access=protected)
 
 		function makeTuples(self, key)
-            
+            thisExpt = fetch1(v1inf.ExpType & key,'exp_type');
+            if contains(thisExpt,'Monitor-Off')
+                fprintf('Skipping Random Gratings for Monitor Off Experiment \n');
+                return
+            end
             theseNeurons = fetch(v1inf.Neuron & key);
             thisGP = fetch(v1inf.RandomGratingsGP & key,'*');
             nNeurons = length(theseNeurons);

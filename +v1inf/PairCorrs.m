@@ -28,6 +28,11 @@ classdef PairCorrs < dj.Computed
     methods(Access=protected)
 
 		function makeTuples(self, key)
+            thisExpt = fetch1(v1inf.ExpType & key,'exp_type');
+            if contains(thisExpt,'Monitor-Off')
+                fprintf('Skipping Random Gratings for Monitor Off Experiment \n');
+                return
+            end
             theseTargets = v1inf.Target & key;
             nTargets = length(fetchn(theseTargets,'targ_id'));
             theseTunings = v1inf.TuningProps & key;
