@@ -10,6 +10,11 @@ classdef RandomGratingsExp < dj.Computed
 	methods(Access=protected)
 
 		function makeTuples(self, key)
+            thisExpt = fetch1(v1inf.ExpType & key,'exp_type');
+            if contains(thisExpt,'Monitor-Off')
+                fprintf('Skipping Random Gratings for Monitor Off Experiment \n');
+                return
+            end
             q1 = sprintf('mouse_id = %d', key.mouse_id);
             q2 = sprintf('exp_date = "%s"',key.exp_date);
             thisExp = v1inf.ExpSync & q1 & q2;
