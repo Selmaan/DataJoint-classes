@@ -38,6 +38,7 @@ populate(v1inf.ExpSync),
 populate(v1inf.MeanRefImg),
 populate(v1inf.Neuron),
 populate(v1inf.Target),
+populate(v1inf.TargetedNeurons),
 populate(v1inf.RandomGratingsExp),
 % Manually export randomGratings data for fitting on orchestra
 populate(v1inf.StimGratingsData),
