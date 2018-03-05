@@ -54,6 +54,7 @@ populate(v1inf.StimGratingsNeurMI),
 populate(v1inf.RandomGratingsGP),
 populate(v1inf.TuningProps),
 populate(v1inf.PairCorrs),
+populate(v1inf.NearestPairCorrs),
 populate(v1inf.TuningDOM),
 
 %%
