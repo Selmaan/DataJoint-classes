@@ -31,7 +31,11 @@ for nID = 1:length(mouseIDs)
         end
     end
 end
-    
+  
+%% Specify Experiment 'Type'
+newSessions = v1inf.Experiment - v1inf.ExpType;
+insert(newSessions,TypeOfExperiment),
+
 %%
 % After adding new session to database from sever, run following code
 populate(v1inf.ExpSync),
@@ -44,6 +48,9 @@ populate(v1inf.RandomGratingsExp),
 populate(v1inf.StimGratingsData),
 populate(v1inf.FiltOverlap),
 populate(v1inf.Influence),
+% populate(v1inf.InfVals), This can be populated at any time
+populate(v1inf.NeuronAvgCorr),
+populate(v1inf.TargetAvgCorr),
 populate(v1inf.StimGratingsTrials),
 populate(v1inf.StimGratingsTrialsNB),
 populate(v1inf.StimGratingsNeurMI),
