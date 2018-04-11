@@ -14,10 +14,10 @@ classdef TargetedNeurons < dj.Computed
            thisTarg = fetch(v1inf.Target & key, 'targ_xc','targ_yc','targ_label','neur_id');
            [neurX,neurY,neurID] = fetchn(v1inf.Neuron & key,'neur_xc','neur_yc','neur_id');
            targDist = sqrt((neurX-thisTarg.targ_xc).^2 + (neurY-thisTarg.targ_yc).^2);
-           closestNeur = neurID(targDist==min(targDist));
-           closestNeur = closestNeur(1);
            
-           key.neur_id = closestNeur;
+           nearbyNeur = find(targDist<=prctile(targDist,2));
+           thisNeur = nearbyNeur(randi(length(nearbyNeur),1));
+           key.neur_id = neurID(thisNeur);
            if thisTarg.targ_label > 0.99
                key.targ_type = 'Matched';
            elseif thisTarg.targ_label < 0.01
