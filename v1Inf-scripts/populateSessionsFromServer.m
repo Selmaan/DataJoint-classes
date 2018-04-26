@@ -48,7 +48,7 @@ populate(v1inf.RandomGratingsExp),
 populate(v1inf.StimGratingsData),
 populate(v1inf.FiltOverlap),
 populate(v1inf.Influence),
-% populate(v1inf.InfVals), This can be populated at any time
+populate(v1inf.InfVals),
 populate(v1inf.NeuronAvgCorr),
 populate(v1inf.TargetAvgCorr),
 populate(v1inf.StimGratingsTrials),
