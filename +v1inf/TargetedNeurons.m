@@ -2,8 +2,8 @@
 # Nearest Cell for all control & unmatched stim targets
 -> v1inf.Target
 -----
-neur_id: smallint unsigned         # stim-triggered-average image
-targ_type: enum('Matched','Unmatched','Control')    # filename of stim-triggered-average movie
+neur_id: smallint unsigned         # Neuron ID sampled for this target
+targ_type: enum('Matched','Unmatched','Control')    # type of photostim target
 %}
 
 classdef TargetedNeurons < dj.Computed
