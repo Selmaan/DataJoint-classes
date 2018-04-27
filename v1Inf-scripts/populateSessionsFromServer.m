@@ -49,6 +49,7 @@ populate(v1inf.StimGratingsData),
 populate(v1inf.FiltOverlap),
 populate(v1inf.Influence),
 populate(v1inf.InfVals),
+populate(v1inf.NearestTraceCorr),
 populate(v1inf.NeuronAvgCorr),
 populate(v1inf.TargetAvgCorr),
 populate(v1inf.StimGratingsTrials),
@@ -67,3 +68,7 @@ populate(v1inf.TuningDOM),
 %%
 % Process STAs on their own timescale, can take quite a while...
 populate(v1inf.StimTrigAvgs),
+
+%% Time-bin Analysis also can take quite a while, tho faster than the STAs
+populate(v1inf.StimGratingsBinData),
+populate(v1inf.InfluenceBin),
