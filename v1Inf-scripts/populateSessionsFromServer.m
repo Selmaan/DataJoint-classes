@@ -3,7 +3,7 @@
 %% Add new Sessions
 
 % mouseIDs = fetchn(v1inf.Mouse,'mouse_id');
-mouseIDs = 37; %Insert new mouse ID here!
+mouseIDs = 38:41; %Insert new mouse ID here!
 
 for nID = 1:length(mouseIDs)
     id = mouseIDs(nID);
@@ -22,19 +22,23 @@ for nID = 1:length(mouseIDs)
         
         tmpDate = seshFolders(nFolder).name;
         thisDate = sprintf('20%s-%s-%s',tmpDate(1:2),tmpDate(3:4),tmpDate(5:6));
-        if str2num(tmpDate(1:2))==17 & str2num(tmpDate(3:4))>2
-            tmpPrompt = sprintf('Is experiment from m%d on %s valid?',id,tmpDate);
-            includeSession = input(tmpPrompt);
-            if includeSession
-                insert(v1inf.Experiment,{id,thisDate,thisDir,thisStimProc}),
-            end
+        tmpPrompt = sprintf('Is experiment from m%d on %s valid?',id,tmpDate);
+        includeSession = input(tmpPrompt);
+        if includeSession
+            insert(v1inf.Experiment,{id,thisDate,thisDir,thisStimProc}),
         end
     end
 end
   
 %% Specify Experiment 'Type'
+newExpType = 'Multi-Contrast';
 newSessions = v1inf.Experiment - v1inf.ExpType;
-insert(newSessions,TypeOfExperiment),
+newKeyes = fetch(newSessions);
+for i=1:length(newKeyes)
+    thisKey = newKeyes(i);
+    thisKey.exp_type = newExpType;
+    insert(v1inf.ExpType,thisKey),
+end
 
 %%
 % After adding new session to database from sever, run following code
