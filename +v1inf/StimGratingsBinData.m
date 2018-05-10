@@ -13,8 +13,6 @@ classdef StimGratingsBinData < dj.Computed
     	methods(Access=protected)
 
 		function makeTuples(self, key)
-%             q1 = sprintf('mouse_id = %d', key.mouse_id);
-%             q2 = sprintf('exp_date = "%s"',key.exp_date);
             thisSync = v1inf.ExpSync & key;
             theseNeurons = v1inf.Neuron & key;
             neur_deconv = fetchn(theseNeurons,'neur_deconv','ORDER BY neur_id');
@@ -45,9 +43,10 @@ for nBlock = find(syncInfo.stim_blocks)
     blockOffsetFrame = length(cat(1,syncInfo.frame_times{1:nBlock-1}));
     lastTrial = find(~isnan(syncInfo.psych2frame{nBlock}),1,'last')-1;
     visFrames = syncInfo.psych2frame{nBlock}(1:lastTrial) + blockOffsetFrame;
-    thisVisDir = syncInfo.stim_info{nBlock}((1:3:lastTrial*3)+4);
+    thisVisDir = [syncInfo.stim_info{nBlock}((1:3:lastTrial*3)+4),...
+        syncInfo.stim_info{nBlock}((2:3:lastTrial*3)+4)];
     thisStimID = syncInfo.stim_order{nBlock}';
-    thisStimID(end+1:length(thisVisDir)) = nan;
+    thisStimID(end+1:lastTrial) = nan;
     
     respFrames = bsxfun(@plus,visFrames,respFrameRange)';
     thisMvSpd = reshape(ballVel(respFrames,:),[size(respFrames), size(ballVel,2)]);
