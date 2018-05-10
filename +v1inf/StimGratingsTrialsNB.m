@@ -49,9 +49,21 @@ function [cvProbs_r,cvPred_r,cvProbs_t,cvPred_t] = computeStimProbs(stimExpt,key
 
 %% Formatting
 deResp = stimExpt.stim_de_resp;
-visOri = mod(stimExpt.stim_vis_dir,180);
 stimID = stimExpt.stim_targ_id;
 validTrials = ~isnan(stimID);
+% Identify zero-contrast trials, set to orientation of 255
+if size(stimExpt.stim_vis_dir,2)==1
+    visOri = mod(stimExpt.stim_vis_dir,180);
+elseif size(stimExpt.stim_vis_dir,2)==2
+    zeroContrasts = stimData.stim_vis_dir(:,2)==0;
+    if ~sum(zeroContrasts)
+        error('Data Formatting error, see above in code?'),
+    end
+    visOri = mod(stimExpt.stim_vis_dir,180);
+    visOri(zeroContrasts) = 255;
+else
+    error('Unknown Data Format'),
+end
 
 tLabel = fetchn(v1inf.Target & key,'targ_label','ORDER BY targ_id');
 nTargTraces = sum(tLabel>.99);

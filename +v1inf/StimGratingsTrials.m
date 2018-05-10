@@ -62,8 +62,22 @@ function [allProj,allGain,uniProj] = computeStimProjections(stimExpt,key)
 %% Get Average Vectors and Residuals
 deResp = stimExpt.stim_de_resp;
 preResp = stimExpt.stim_de_pre;
-visOri = mod(stimExpt.stim_vis_dir,180);
 stimID = stimExpt.stim_targ_id;
+
+% Identify zero-contrast trials, set to orientation of 255
+if size(stimExpt.stim_vis_dir,2)==1
+    visOri = mod(stimExpt.stim_vis_dir,180);
+elseif size(stimExpt.stim_vis_dir,2)==2
+    zeroContrasts = stimData.stim_vis_dir(:,2)==0;
+    if ~sum(zeroContrasts)
+        error('Data Formatting error, see above in code?'),
+    end
+    visOri = mod(stimExpt.stim_vis_dir,180);
+    visOri(zeroContrasts) = 255;
+else
+    error('Unknown Data Format'),
+end
+
 
 % [nX,nY] = fetchn(v1inf.Neuron & key,'neur_xc','neur_yc','ORDER BY neur_id');
 % [tX,tY,tLabel] = fetchn(v1inf.Target & key,'targ_xc','targ_yc','targ_label','ORDER BY targ_id');

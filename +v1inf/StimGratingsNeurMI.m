@@ -45,8 +45,21 @@ function [neuronOriInfo,avgResp,stimResp] = computeStimMI(stimExpt,key)
 
 %% Formatting
 deResp = stimExpt.stim_de_resp;
-visOri = mod(stimExpt.stim_vis_dir,180);
 stimID = stimExpt.stim_targ_id;
+% Identify zero-contrast trials, set to orientation of 255
+if size(stimExpt.stim_vis_dir,2)==1
+    visOri = mod(stimExpt.stim_vis_dir,180);
+elseif size(stimExpt.stim_vis_dir,2)==2
+    zeroContrasts = stimData.stim_vis_dir(:,2)==0;
+    if ~sum(zeroContrasts)
+        error('Data Formatting error, see above in code?'),
+    end
+    visOri = mod(stimExpt.stim_vis_dir,180);
+    visOri(zeroContrasts) = 255;
+else
+    error('Unknown Data Format'),
+end
+
 [tID,tLabel] = fetchn(v1inf.Target & key,'targ_id','targ_label','ORDER BY targ_id');
 neurID2targID = tID(tLabel>.99);
 allOri = unique(visOri);
