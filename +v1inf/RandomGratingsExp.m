@@ -15,9 +15,7 @@ classdef RandomGratingsExp < dj.Computed
                 fprintf('Skipping Random Gratings for Monitor Off Experiment \n');
                 return
             end
-            q1 = sprintf('mouse_id = %d', key.mouse_id);
-            q2 = sprintf('exp_date = "%s"',key.exp_date);
-            thisExp = v1inf.ExpSync & q1 & q2;
+            thisExp = v1inf.ExpSync & key;
             
             key.rg_resps = makeRgRespStruct(thisExp);
             self.insert(key)
