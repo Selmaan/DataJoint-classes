@@ -57,12 +57,26 @@ distThresh = 25;
 nShuffles = 1e5;
 [nRespCells,nTargets] = size(infDist);
 
+% Make all 0 contrast trials have a grating direction of '0'
+% Note this works only for multi-contrast with 2 levels where one is zero
+if size(stimData.stim_vis_dir,2)==2
+    zeroContrasts = stimData.stim_vis_dir(:,2)==0;
+    if ~sum(zeroContrasts)
+        error('Data Formatting error, see above in code?'),
+    end
+    stimVisDir = stimData.stim_vis_dir(:,1);
+    stimVisDir(zeroContrasts) = 0;
+elseif size(stimData.stim_vis_dir,2)==1
+    stimVisDir = stimData.stim_vis_dir(:,1);
+else
+    error('Unknown Data Format'),
+end
 
 %% Calculate Residual Signal
-allDirs = unique(stimData.stim_vis_dir);
+allDirs = unique(stimVisDir);
 visAvg = []; visResid = [];
 for s=1:length(allDirs)
-    theseTrials = (stimData.stim_vis_dir==allDirs(s));
+    theseTrials = (stimVisDir==allDirs(s));
     for n=1:nRespCells
         validStim = find(infDist(n,:) >= distThresh);
         validInd = theseTrials & ismember(stimData.stim_targ_id,validStim);
