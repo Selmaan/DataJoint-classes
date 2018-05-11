@@ -55,11 +55,11 @@ validTrials = ~isnan(stimID);
 if size(stimExpt.stim_vis_dir,2)==1
     visOri = mod(stimExpt.stim_vis_dir,180);
 elseif size(stimExpt.stim_vis_dir,2)==2
-    zeroContrasts = stimData.stim_vis_dir(:,2)==0;
+    zeroContrasts = stimExpt.stim_vis_dir(:,2)==0;
     if ~sum(zeroContrasts)
         error('Data Formatting error, see above in code?'),
     end
-    visOri = mod(stimExpt.stim_vis_dir,180);
+    visOri = mod(stimExpt.stim_vis_dir(:,1),180);
     visOri(zeroContrasts) = 255;
 else
     error('Unknown Data Format'),
