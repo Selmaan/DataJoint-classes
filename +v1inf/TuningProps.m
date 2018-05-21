@@ -27,7 +27,7 @@ spd_std=NULL : blob          # Running spd Tuning, ...
 classdef TuningProps < dj.Computed
     
     properties
-        popRel = v1inf.ExpSync;
+        popRel = v1inf.RandomGratingsGP;
     end
 
 	methods(Access=protected)

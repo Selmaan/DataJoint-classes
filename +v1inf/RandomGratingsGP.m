@@ -14,8 +14,13 @@ classdef RandomGratingsGP < dj.Computed
 
 		function makeTuples(self, key)
             baseDir = 'F:\DataJoint-FileOut';
-            thisFn = sprintf('orchestraStimFitsGP_m%d_%s_jobIndex NaN',...
+            thisFn = sprintf('orchestraStimFitsGP_m%d_%s_jobIndex NaN.mat',...
                 key.mouse_id, key.exp_date);
+            if ~exist(fullfile(baseDir,thisFn),'file')
+                warning('File Not Found, Skipping'),
+                return
+            end
+            
             load(fullfile(baseDir,thisFn)),
             
             gPar = replaceFunctionHandlesWithStrings(gPar);
