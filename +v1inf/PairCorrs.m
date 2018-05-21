@@ -22,7 +22,7 @@ inf_targ_traincorr=NULL: double # Target Tuning Model Train Correlation
 %%
 classdef PairCorrs < dj.Computed
     properties
-        popRel = v1inf.ExpSync;
+        popRel = v1inf.RandomGratingsGP;
     end
     
     methods(Access=protected)
@@ -38,6 +38,7 @@ classdef PairCorrs < dj.Computed
             theseTunings = v1inf.TuningProps & key;
             nNeurons = length(fetchn(theseTunings,'neur_id'));
             
+            
             [neurID,neur_testcorr_tmp,neur_traincorr_tmp,neur_predresp_tmp,neur_residresp_tmp,...
                 neur_dirmean_tmp,neur_sfmean_tmp,neur_tfmean_tmp,neur_spdmean_tmp] = fetchn(theseTunings,...
                 'neur_id','test_corr','train_corr','pred_resp','resid_resp',...
@@ -46,7 +47,7 @@ classdef PairCorrs < dj.Computed
             noFitNeurons = find(~isfinite(neur_testcorr_tmp));
             if ~isempty(noFitNeurons)
                 fprintf('Found %d Invalid Neuron Model(s) \n',length(noFitNeurons)),
-                neurID = setdiff(neurID,noFitNeurons);
+                neurID = setdiff(neurID,neurID(noFitNeurons));
             end
             invalidNeurons = find(~ismember(1:nNeurons,neurID));
             
@@ -78,7 +79,7 @@ classdef PairCorrs < dj.Computed
             noFitTargets = find(~isfinite(targ_testcorr_tmp));
             if ~isempty(noFitTargets)
                 fprintf('Found %d Invalid Target Model(s) \n',length(noFitTargets)),
-                targID = setdiff(targID,noFitTargets);
+                targID = setdiff(targID,targID(noFitTargets));
             end
             invalidTargets = find(~ismember(1:nTargets,targID));
                 
