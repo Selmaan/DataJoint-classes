@@ -17,6 +17,13 @@ classdef StimGratingsTrialsNB < dj.Computed
 		function makeTuples(self, key)
             stimExpt = fetch(v1inf.StimGratingsData & key,'*');
             
+            % Subset only 10% contrast trials from multi experiments
+            thisExptType = fetch1(v1inf.ExpType & key,'exp_type');
+            if strcmp(thisExptType,'Multi-Contrast') 
+                t10 = stimExpt.stim_vis_dir(:,2)==0.1;
+                stimExpt = subsetStimTrials(stimExpt,t10);
+            end
+            
             [cvProbs_r,cvPred_r,cvProbs_t,cvPred_t] = computeStimProbs(stimExpt,key);
             
             validTrials = find(isfinite(stimExpt.stim_targ_id));
@@ -43,7 +50,18 @@ classdef StimGratingsTrialsNB < dj.Computed
 	end
 end
 
+function stimData_ind = subsetStimTrials(stimData,tInd)
 
+stimData_ind = stimData;
+stimData_ind.stim_targ_id = stimData_ind.stim_targ_id(tInd,1);
+stimData_ind.stim_vis_dir = stimData_ind.stim_vis_dir(tInd,1);
+stimData_ind.stim_mv_spd = stimData_ind.stim_mv_spd(tInd,1);
+stimData_ind.stim_pre_spd = stimData_ind.stim_pre_spd(tInd,1);
+
+stimData_ind.stim_de_resp = stimData_ind.stim_de_resp(tInd,:);
+stimData_ind.stim_de_pre = stimData_ind.stim_de_pre(tInd,:);
+
+end
 
 function [cvProbs_r,cvPred_r,cvProbs_t,cvPred_t] = computeStimProbs(stimExpt,key)
 
