@@ -76,3 +76,9 @@ populate(v1inf.StimTrigAvgs),
 %% Time-bin Analysis also can take quite a while, tho faster than the STAs
 populate(v1inf.StimGratingsBinData),
 populate(v1inf.InfluenceBin),
+
+%% Analyses & Tables for paper review process, excluding multi-contrast!
+populate(v1inf.NeurDf),
+populate(v1inf.StimGratingsTraces),
+populate(v1inf.InfTrace),
+populate(v1inf.InfTraceResid)
