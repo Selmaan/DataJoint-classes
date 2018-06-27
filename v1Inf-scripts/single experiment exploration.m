@@ -158,12 +158,12 @@ figure,plot(elapsedDays,sigCoefs_lm,'.','markersize',30),
 figure,plot(elapsedDays,sigCoefs_lme,'.','markersize',30),
 [c,p] = corr([elapsedDays,sigCoefs_lm,sigCoefs_lme],'type','Spearman'),
 
-%% Number of experiments in the same mouse, and single-mouse level stats
+%% Number of experiments in the same mouse, and FOV depth
 
 clear,
-load('sigCoefs_singleContrast.mat'),
-[mID,expDate] = fetchn(v1inf.ExpType & 'exp_type="Single-Contrast"',...
-    'mouse_id','exp_date','ORDER BY exp_date');
+load('sigCoefs_multiContrast.mat'),
+[mID,expDate, zD] = fetchn(v1inf.ExpDepth * v1inf.ExpType & 'exp_type="Multi-Contrast"',...
+    'mouse_id','exp_date','fov_depth','ORDER BY exp_date');
 allMice = unique(mID);
 expNum = nan(length(mID),1);
 for n = 1:length(allMice)
@@ -177,6 +177,9 @@ figure,plot(expNum,sigCoefs_lme,'.','markersize',30),
 xlabel('# of Experiments in Same Mouse'),ylabel('b-sig LME'),
 [c,p] = corr([expNum,sigCoefs_lm,sigCoefs_lme],'type','Spearman','rows','complete'),
 
+% Example code to restrict by these
+% theseExpt = expDate(expNum<=5 & mID~=37);
+% key = struct('exp_date',theseExpt);
 %% Running speed, or fraction of time running, within session
 
 clear,
@@ -194,3 +197,18 @@ xlabel('Fraction of Trials Running'),ylabel('b-sig Ind. Model'),
 figure,plot(runStats(:,1),sigCoefs_lme,'.','markersize',30),
 xlabel('Fraction of Trials Running'),ylabel('b-sig LME'),
 [c,p] = corr([runStats,sigCoefs_lm,sigCoefs_lme],'type','Spearman'),
+
+%% Injection Type
+
+clear,
+load('sigCoefs_singleContrast.mat'),
+[chr, allExpts] = fetchn(v1inf.Mouse * v1inf.ExpType & 'exp_type="Single-Contrast"',...
+    'inj_chr','exp_date','ORDER BY exp_date');
+isC1V1 = strcmp(chr,'C1V1');
+figure,hold on
+plot(sigCoefs_lm(isC1V1),sigCoefs_lme(isC1V1),'.','markersize',30),
+plot(sigCoefs_lm(~isC1V1),sigCoefs_lme(~isC1V1),'.','markersize',30),
+legend('C1V1','ChrimsonR'),
+axis equal,
+
+[c,p] = corr([isC1V1,sigCoefs_lm,sigCoefs_lme],'type','Spearman'),
