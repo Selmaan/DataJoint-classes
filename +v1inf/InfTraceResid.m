@@ -76,7 +76,7 @@ for s=1:length(allDirs)
 end
 
 for n=1:nRespCells
-    validStim = find(infDist(n,:) >=distThresh);
+    validStim = ismember(stimID,find(infDist(n,:) >=distThresh));
     validResps = visResid(stdRange,validStim,n);
     stdVal(n) = std(mean(validResps));
 end
