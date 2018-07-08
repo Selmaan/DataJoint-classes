@@ -82,3 +82,4 @@ populate(v1inf.NeurDf),
 populate(v1inf.StimGratingsTraces),
 populate(v1inf.InfTrace),
 populate(v1inf.InfTraceResid)
+populate(v1inf.AvgDeResid),
