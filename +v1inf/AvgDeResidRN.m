@@ -30,7 +30,8 @@ classdef AvgDeResidRN < dj.Computed
             infDist = reshape(infDist,size(deResp,3),[]);
 
             deMat = calcAvgResid(deResp, infDist, stimID, stimVisDir(:,1),targ_label);
-
+            deMat(~isfinite(deMat)) = 0;
+            
             keys = repmat(key,size(infDist));
             for nNeuron = 1:size(infDist,1)
                 for nTarg = 1:size(infDist,2)
