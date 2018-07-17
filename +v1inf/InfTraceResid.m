@@ -26,13 +26,15 @@ classdef InfTraceResid < dj.Computed
             [dfResp, deResp, ayResp, stimID, stimVisDir] = fetch1(theseStimInfo,...
                 'stimt_df_resp','stimt_de_resp','stimt_ay_resp','stimt_targ_id','stimt_vis_dir');
             dfResp = double(dfResp); deResp = double(deResp); ayResp = double(ayResp);
+            targ_label = fetchn(v1inf.Target & key,...
+               'targ_label','ORDER BY targ_id');
             
             infDist = fetchn(v1inf.Influence & key,'inf_dist','ORDER BY targ_id, neur_id');
             infDist = reshape(infDist,size(dfResp,3),[]);
 
-            [dfMat, dfStd] = calcAvgResid(dfResp, infDist, stimID, stimVisDir(:,1));
-            [deMat, deStd] = calcAvgResid(deResp, infDist, stimID, stimVisDir(:,1));
-            [ayMat, ayStd] = calcAvgResid(ayResp, infDist, stimID, stimVisDir(:,1));
+            [dfMat, dfStd] = calcAvgResid(dfResp, infDist, stimID, stimVisDir(:,1),targ_label);
+            [deMat, deStd] = calcAvgResid(deResp, infDist, stimID, stimVisDir(:,1),targ_label);
+            [ayMat, ayStd] = calcAvgResid(ayResp, infDist, stimID, stimVisDir(:,1),targ_label);
             
             keys = repmat(key,size(infDist));
             for nNeuron = 1:size(infDist,1)
@@ -54,7 +56,7 @@ classdef InfTraceResid < dj.Computed
     end
 end
 
-function [respMat, stdMat] = calcAvgResid(trialResps, infDist, stimID, stimVisDir)
+function [respMat, stdMat] = calcAvgResid(trialResps, infDist, stimID, stimVisDir, targ_label)
 
 distThresh = 30;
 stdRange = 23:45; %indices for normalization, should be 7-29 frames from stim onset (exclude artifact frames)
@@ -64,11 +66,17 @@ stdRange = 23:45; %indices for normalization, should be 7-29 frames from stim on
 allDirs = unique(stimVisDir);
 visAvg = nan(size(trialResps,1),length(allDirs),nRespCells); 
 visResid = nan(size(trialResps));
+controlStim = find(targ_label <= 0.01);
+if isempty(controlStim)
+    warning('No Control Stim in this experiment?'),
+    controlStim = find(targ_label<1/2);
+end
 
 for s=1:length(allDirs)
     theseTrials = (stimVisDir==allDirs(s));
     for n=1:nRespCells
-        validStim = find(infDist(n,:) >=distThresh);
+%         validStim = find(infDist(n,:) >=distThresh);
+        validStim = intersect(controlStim, find(infDist(n,:) >=distThresh));
         validInd = ismember(stimID, validStim) & theseTrials;
         visAvg(:,s,n) = mean(trialResps(:,validInd,n),2);
     end
