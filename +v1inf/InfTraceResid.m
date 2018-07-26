@@ -75,8 +75,8 @@ end
 for s=1:length(allDirs)
     theseTrials = (stimVisDir==allDirs(s));
     for n=1:nRespCells
-%         validStim = find(infDist(n,:) >=distThresh);
-        validStim = intersect(controlStim, find(infDist(n,:) >=distThresh));
+        validStim = find(infDist(n,:) >=distThresh);
+%         validStim = intersect(controlStim, find(infDist(n,:) >=distThresh));
         validInd = ismember(stimID, validStim) & theseTrials;
         visAvg(:,s,n) = mean(trialResps(:,validInd,n),2);
     end

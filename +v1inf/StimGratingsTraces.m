@@ -25,7 +25,7 @@ classdef StimGratingsTraces < dj.Computed
             neur_deconv = cell2mat(neur_deconv')';
             neur_df = cell2mat(neur_df')';
             neur_ay = cell2mat(neur_ay')';
-            neur_ay = neur_ay ./ mean(neur_ay,2) .* mean(neur_df,2); % Normalize to scale of dF/F
+            neur_ay = neur_ay ./ std(neur_ay,[],2) .* std(neur_df,[],2); % Normalize to scale of dF/F
             syncInfo = fetch(thisSync,'*');
             [stimID,visDir,mvSpd,deResp,dfResp,ayResp] = stimGratingsResp(...
                 syncInfo, neur_deconv, neur_df, neur_ay);
