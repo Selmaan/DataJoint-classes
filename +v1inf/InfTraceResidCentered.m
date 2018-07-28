@@ -10,7 +10,7 @@ stdr_de: double      # std of post-synaptic neurons de (for normalizing)
 stdr_ay: double      # std of post-synaptic neurons AY (for normalizing)
 %}
 
-classdef InfTraceResid < dj.Computed
+classdef InfTraceResidCentered < dj.Computed
     properties
         popRel = v1inf.ExpSync;
     end
@@ -75,7 +75,7 @@ end
 for s=1:length(allDirs)
     theseTrials = (stimVisDir==allDirs(s));
     for n=1:nRespCells
-        validStim = find(infDist(n,:) >=distThresh);
+        validStim = intersect(controlStim, find(infDist(n,:) >=distThresh));
         validInd = ismember(stimID, validStim) & theseTrials;
         visAvg(:,s,n) = mean(trialResps(:,validInd,n),2);
     end
